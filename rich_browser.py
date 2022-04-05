@@ -2,27 +2,37 @@ import os
 import sys
 
 from rich.console import RenderableType
-from cnp_worker.cnp_s3 import CnpS3
+from cnp_worker.cnp_s3 import CustomS3
 import logging
 from rich.syntax import Syntax, DEFAULT_THEME,SyntaxTheme, Lexer
 from rich.traceback import Traceback
 from typing import Any, Optional, Union, Tuple, Set
 from textual.widgets import DirectoryTree, TreeNode
 from textual.widgets._directory_tree import DirEntry
-from cnp_worker.cnp_s3 import CnpS3
+from cnp_worker.cnp_s3 import CustomS3
 from textual.app import App
 import json
 from textual.widgets import Header, Footer, FileClick, ScrollView
+
 with open("s3_config.json", 'r') as f:
-
-
     params = json.load(f)
+
+
+class CustomS3Config(BaseModel):
+    aws_secret_access_key: str = "minio_access_key"
+    aws_access_key_id: str = "minio_secret_key"
+    endpoint_url: str = "localhost:9000"
+    bucket: str = "default"
+
+class CustomS3(S3FileSystem):
+    def __init__(self, config: CustomS3Config, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs, **config)
 
 
 
 
 class CnpDirectoryTree(DirectoryTree):
-    def __init__(self, path: str, name: str = None, s3: CnpS3 = None) -> None:
+    def __init__(self, path: str, name: str = None, s3: CustomS3 = None) -> None:
         self.s3 = s3
         
         super().__init__(path, name=name)
@@ -59,7 +69,7 @@ class CnpSyntax(Syntax):
         word_wrap: bool = False,
         background_color: Optional[str] = None,
         indent_guides: bool = False,
-        s3: CnpS3 = None
+        s3: CustomS3 = None
     ) -> "Syntax":
         """Construct a Syntax object from a file.
 
@@ -116,7 +126,7 @@ class MyApp(App):
         await self.bind("down", "", "down")
         await self.bind("enter", "", "open node")
         await self.bind("q", "quit", "Quit")
-        self.s3_instance = CnpS3(**params)
+        self.s3_instance = CustomS3(**params)
         # Get path to show
         
         self.path = ""

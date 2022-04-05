@@ -1,0 +1,22 @@
+version: '3'
+services:
+  s3:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    # labels:
+    #   - "traefik.http.routers.s3.rule=Host(`s3.test.ctg.lu`)"
+    #   - "traefik.http.routers.s3.entrypoints=web,websecure"
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.s3.tls=true"
+    #   - "traefik.http.services.s3.loadbalancer.server.port=9001"
+    #   - "traefik.http.routers.s3.tls.certresolver=myresolver"
+    volumes:
+      - ./other_services/storage/minio:/data 
+    environment:
+      MINIO_ACCESS_KEY: minio_access_key
+      MINIO_SECRET_KEY: minio_secret_key
+    command: server /data  --console-address ":9001"
+    networks: 
+      - proxy
