@@ -1,0 +1,23 @@
+---
+driver=<class 'textual.drivers.linux_driver.LinuxDriver'>
+Load() >>> MyApp(title='Textual')
+Mount() >>> MyApp(title='Cnp S3 Browser Viewer')
+Mount() >>> DockView(name='DockView#1')
+Mount() >>> Header('')
+Mount() >>> ScrollView(name='ScrollView#2')
+Mount() >>> ScrollView(name='ScrollView#2')
+Mount() >>> ScrollView(name='ScrollView#1')
+Mount() >>> ScrollView(name='ScrollView#1')
+Mount() >>> WindowView(name='WindowView#2')
+Mount() >>> WindowView(name='WindowView#1')
+Mount() >>> CnpDirectoryTree(name='Code')
+CLOSED CnpDirectoryTree(name='Code')
+TRANSLATING layout
+CLOSED MyApp(title='Cnp S3 Browser Viewer')
+PROCESS END
+WindowChange(WindowView(name='WindowView#2')) >>> ScrollView(name='ScrollView#2')
+WindowChange(WindowView(name='WindowView#1')) >>> ScrollView(name='ScrollView#1')
+CLOSED ScrollView(name='ScrollView#2')
+CLOSED ScrollView(name='ScrollView#1')
+CLOSED Header('Cnp S3 Browser Viewer')
+CLOSED Footer(keys=[])

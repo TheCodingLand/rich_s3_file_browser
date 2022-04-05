@@ -2,31 +2,32 @@ import os
 import sys
 
 from rich.console import RenderableType
-from cnp_worker.cnp_s3 import CustomS3
+
 import logging
 from rich.syntax import Syntax, DEFAULT_THEME,SyntaxTheme, Lexer
 from rich.traceback import Traceback
 from typing import Any, Optional, Union, Tuple, Set
 from textual.widgets import DirectoryTree, TreeNode
 from textual.widgets._directory_tree import DirEntry
-from cnp_worker.cnp_s3 import CustomS3
+from pydantic import BaseModel
 from textual.app import App
 import json
 from textual.widgets import Header, Footer, FileClick, ScrollView
 
 with open("s3_config.json", 'r') as f:
     params = json.load(f)
-
+from s3fs import S3FileSystem
 
 class CustomS3Config(BaseModel):
-    aws_secret_access_key: str = "minio_access_key"
-    aws_access_key_id: str = "minio_secret_key"
-    endpoint_url: str = "localhost:9000"
-    bucket: str = "default"
+    aws_access_key_id : str = "minio_access_key"
+    aws_secret_access_key : str = "minio_secret_key"
+    endpoint_url: str = "http://localhost:9000"
+    #bucket: str = "default"
+    use_ssl: bool = False
 
 class CustomS3(S3FileSystem):
     def __init__(self, config: CustomS3Config, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, **config)
+        super().__init__(*args, **kwargs, client_kwargs=config.dict())
 
 
 
@@ -42,7 +43,7 @@ class CnpDirectoryTree(DirectoryTree):
 
         directory = sorted(
 
-            [ self.s3.decompose_path(x) for x in self.s3.ls(path, include_path=True, recursivity=False)], key=lambda entry: (not entry.is_dir, entry.full_path)
+            [ self.s3.decompose_path(x) for x in self.s3.ls(path)], key=lambda entry: (not entry.is_dir, entry.full_path)
         )
         for entry in directory:
             await node.add(entry.name, DirEntry(entry.full_path, entry.is_dir))
@@ -126,7 +127,8 @@ class MyApp(App):
         await self.bind("down", "", "down")
         await self.bind("enter", "", "open node")
         await self.bind("q", "quit", "Quit")
-        self.s3_instance = CustomS3(**params)
+        config = CustomS3Config(**params)
+        self.s3_instance = CustomS3(config=config)
         # Get path to show
         
         self.path = ""
