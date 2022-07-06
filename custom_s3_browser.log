@@ -1,0 +1,78 @@
+---
+driver=<class 'textual.drivers.linux_driver.LinuxDriver'>
+Load() >>> MyApp(title='Textual')
+Mount() >>> MyApp(title='Rich S3 Browser Viewer')
+Mount() >>> DockView(name='DockView#1')
+Mount() >>> Header('')
+Mount() >>> ScrollView(name='ScrollView#2')
+Mount() >>> ScrollView(name='ScrollView#2')
+Mount() >>> ScrollView(name='ScrollView#3')
+Mount() >>> ScrollView(name='ScrollView#3')
+Mount() >>> ScrollView(name='ScrollView#1')
+Mount() >>> ScrollView(name='ScrollView#1')
+Mount() >>> WindowView(name='WindowView#2')
+Mount() >>> WindowView(name='WindowView#3')
+Mount() >>> WindowView(name='WindowView#1')
+Mount() >>> DirectoryTree(name='Local')
+Mount() >>> S3DirectoryTree(name='Remote')
+set_focus S3DirectoryTree(name='Remote')
+Focus() >>> S3DirectoryTree(name='Remote')
+TRANSLATING layout
+TRANSLATING layout
+WindowChange(WindowView(name='WindowView#2')) >>> ScrollView(name='ScrollView#2')
+WindowChange(WindowView(name='WindowView#3')) >>> ScrollView(name='ScrollView#3')
+WindowChange(WindowView(name='WindowView#1')) >>> ScrollView(name='ScrollView#1')
+WindowChange(WindowView(name='WindowView#2')) >>> ScrollView(name='ScrollView#2')
+TRANSLATING layout
+WindowChange(WindowView(name='WindowView#3')) >>> ScrollView(name='ScrollView#3')
+TRANSLATING layout
+set_focus S3DirectoryTree(name='Remote')
+MouseDown(x=2, y=1, screen_x=50, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+MouseUp(x=2, y=1, screen_x=50, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+Click(x=2, y=1, screen_x=50, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+ACTION S3DirectoryTree(name='Remote') click_label
+TreeClick(node=TreeNode(id=0, label='', data=DirEntry(path='', is_dir=True))) >>> S3DirectoryTree(name='Remote')
+TRANSLATING layout
+TRANSLATING layout
+CursorMove(S3DirectoryTree(name='Remote')) >>> ScrollView(name='ScrollView#3')
+WindowChange(WindowView(name='WindowView#3')) >>> ScrollView(name='ScrollView#3')
+TRANSLATING layout
+TRANSLATING layout
+set_focus S3DirectoryTree(name='Remote')
+MouseDown(x=3, y=1, screen_x=51, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+MouseUp(x=3, y=1, screen_x=51, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+Click(x=3, y=1, screen_x=51, screen_y=4, button=1) >>> S3DirectoryTree(name='Remote')
+ACTION S3DirectoryTree(name='Remote') click_label
+TreeClick(node=TreeNode(id=0, label='', data=DirEntry(path='', is_dir=True))) >>> S3DirectoryTree(name='Remote')
+TRANSLATING layout
+WindowChange(WindowView(name='WindowView#3')) >>> ScrollView(name='ScrollView#3')
+TRANSLATING layout
+TRANSLATING layout
+set_focus S3DirectoryTree(name='Remote')
+MouseDown(x=9, y=2, screen_x=57, screen_y=5, button=1) >>> S3DirectoryTree(name='Remote')
+MouseUp(x=9, y=2, screen_x=57, screen_y=5, button=1) >>> S3DirectoryTree(name='Remote')
+Click(x=9, y=2, screen_x=57, screen_y=5, button=1) >>> S3DirectoryTree(name='Remote')
+ACTION S3DirectoryTree(name='Remote') click_label
+TreeClick(node=TreeNode(id=1, label='test', data=DirEntry(path='test', is_dir=True))) >>> S3DirectoryTree(name='Remote')
+set_focus S3DirectoryTree(name='Remote')
+TRANSLATING layout
+TRANSLATING layout
+WindowChange(WindowView(name='WindowView#3')) >>> ScrollView(name='ScrollView#3')
+TRANSLATING layout
+TRANSLATING layout
+set_focus S3DirectoryTree(name='Remote')
+MouseDown(x=18, y=4, screen_x=66, screen_y=7, button=1) >>> S3DirectoryTree(name='Remote')
+MouseUp(x=18, y=4, screen_x=66, screen_y=7, button=1) >>> S3DirectoryTree(name='Remote')
+Click(x=18, y=4, screen_x=66, screen_y=7, button=1) >>> S3DirectoryTree(name='Remote')
+ACTION S3DirectoryTree(name='Remote') click_label
+TreeClick(node=TreeNode(id=3, label='test/rich_browser.py', data=DirEntry(path='test/rich_browser.py', is_dir=False))) >>> S3DirectoryTree(name='Remote')
+TRANSLATING layout
+FileClick(S3DirectoryTree(name='Remote')) >>> MyApp(title='Rich S3 Browser Viewer')
+FileClick(S3DirectoryTree(name='Remote'))
+WindowChange(WindowView(name='WindowView#1')) >>> ScrollView(name='ScrollView#1')
+WindowChange(WindowView(name='WindowView#1')) >>> ScrollView(name='ScrollView#1')
+TRANSLATING layout
+WindowChange(WindowView(name='WindowView#1')) >>> ScrollView(name='ScrollView#1')
+Leave() >>> Footer(keys=[])
+Leave() >>> Footer(keys=[])
+Leave() >>> Footer(keys=[])

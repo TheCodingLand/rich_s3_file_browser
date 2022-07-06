@@ -1,37 +1,56 @@
+
+
 import os
-import sys
+import logging
 
 from rich.console import RenderableType
-from cnp_worker.cnp_s3 import CustomS3
-import logging
-from rich.syntax import Syntax, DEFAULT_THEME,SyntaxTheme, Lexer
+from pydantic import BaseModel
+
+from rich.syntax import Syntax, DEFAULT_THEME, SyntaxTheme, Lexer
 from rich.traceback import Traceback
-from typing import Any, Optional, Union, Tuple, Set
+from typing import Optional, Union, Tuple, Set
 from textual.widgets import DirectoryTree, TreeNode
 from textual.widgets._directory_tree import DirEntry
-from cnp_worker.cnp_s3 import CustomS3
+
+from s3fs import S3FileSystem
 from textual.app import App
 import json
+from rich.text import Text
 from textual.widgets import Header, Footer, FileClick, ScrollView
+from textual.widget import Widget
+
+class TextWidget(Widget):
+
+    #mouse_over = Reactive(False)
+    text : str
+
+    def __init__(self, name: Union[str, None] = None, text: str= "") -> None:
+        self.text=text
+        super().__init__(name)
+    
+    def render(self) -> Text:
+        return Text(self.text)
+
 
 with open("s3_config.json", 'r') as f:
     params = json.load(f)
 
 
 class CustomS3Config(BaseModel):
-    aws_secret_access_key: str = "minio_access_key"
-    aws_access_key_id: str = "minio_secret_key"
-    endpoint_url: str = "localhost:9000"
-    bucket: str = "default"
+    aws_secret_access_key: str = "minio_secret_key"
+    aws_access_key_id: str = "minio_access_key"
+    endpoint_url: str = "http://s3:9000"
 
+    #bucket: str = "default"
+    
 class CustomS3(S3FileSystem):
     def __init__(self, config: CustomS3Config, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs, **config)
+        self.config = config
+        super().__init__(*args, **kwargs, client_kwargs=config.dict())
 
 
 
-
-class CnpDirectoryTree(DirectoryTree):
+class S3DirectoryTree(DirectoryTree):
     def __init__(self, path: str, name: str = None, s3: CustomS3 = None) -> None:
         self.s3 = s3
         
@@ -42,16 +61,16 @@ class CnpDirectoryTree(DirectoryTree):
 
         directory = sorted(
 
-            [ self.s3.decompose_path(x) for x in self.s3.ls(path, include_path=True, recursivity=False)], key=lambda entry: (not entry.is_dir, entry.full_path)
+            [ x for x in self.s3.ls(path)], key=lambda entry: (not self.s3.isdir(entry), entry)
         )
         for entry in directory:
-            await node.add(entry.name, DirEntry(entry.full_path, entry.is_dir))
+            await node.add(entry, DirEntry(entry, self.s3.isdir(entry)))
         node.loaded = True
         await node.expand()
         await node.control.focus()
         self.refresh(layout=True)
 
-class CnpSyntax(Syntax):
+class CustomSyntax(Syntax):
     @classmethod
     def from_s3_path(
         cls,
@@ -92,8 +111,8 @@ class CnpSyntax(Syntax):
         Returns:
             [Syntax]: A Syntax object that may be printed to the console
         """
-        code = s3.read_object(path).decode("utf-8")
-        logging.error(code)
+        code = s3.cat_file(path).decode("utf-8")
+        
 
         if not lexer:
             lexer = cls.guess_lexer(path, code=code)
@@ -118,18 +137,35 @@ class MyApp(App):
     """An example of a very simple Textual App"""
 
     async def on_load(self) -> None:
+        self.logger = logging.getLogger()
         """Sent before going in to application mode."""
 
         # Bind our basic keys
         await self.bind("b", "view.toggle('sidebar')", "Toggle sidebar")
+        #await self.bind("r", "refresh", "Refresh")
+        await self.bind("t", "switch_transfer_mode", "Download/Edit Mode")
         await self.bind("up", "", "up")
         await self.bind("down", "", "down")
         await self.bind("enter", "", "open node")
         await self.bind("q", "quit", "Quit")
-        self.s3_instance = CustomS3(**params)
-        # Get path to show
         
+        
+        self.s3_instance = CustomS3(config = CustomS3Config(**params))
+        
+        # Get path to show
+        self.transfer_mode: bool = False
+        self.current_path = ""
         self.path = ""
+        self.local_path= os.getcwd()
+    #async def refresh(self) -> None:
+    async def action_switch_transfer_mode(self):
+        self.transfer_mode = not self.transfer_mode
+        self.app.sub_title = f"{'Transfer Mode' if self.transfer_mode else f'{os.path.basename(self.current_path)} - Edit Mode'}"
+        if self.transfer_mode:
+            syntax = TextWidget("Transfer Mode")
+            
+            await self.body.update(syntax)
+    #    self.directory =  S3DirectoryTree(self.path, "Code", self.s3_instance)
 
     async def on_mount(self) -> None:
         """Call after terminal goes in to application mode"""
@@ -137,41 +173,67 @@ class MyApp(App):
         # Create our widgets
         # In this a scroll view for the code and a directory tree
         self.body = ScrollView()
-        self.directory = CnpDirectoryTree(self.path, "Code", self.s3_instance)
+        self.directory = S3DirectoryTree(self.path, "Remote", self.s3_instance)
+        self.local_directory = DirectoryTree(self.local_path, "Local")
 
         # Dock our widgets
         await self.view.dock(Header(), edge="top")
         await self.view.dock(Footer(), edge="bottom")
 
         # Note the directory is also in a scroll view
+        
+        #await self.view.dock(TextWidget(name="S3Addr", text="self.s3"), edge="left", size=48, name="sidebar_header")
+
         await self.view.dock(
-            ScrollView(self.directory), edge="left", size=48, name="sidebar"
-        )
+            
+            ScrollView(self.local_directory),ScrollView(self.directory), edge="left", size=48, name="sidebar")
         await self.view.dock(self.body, edge="top")
+
+    #async def handle_dir_click(self, message: DirClick) -> None:
+        #self.directory.refresh()
+        #pass
+
 
     async def handle_file_click(self, message: FileClick) -> None:
         """A message sent by the directory tree when a file is clicked."""
 
         syntax: RenderableType
         self.log(message)
+        
         try:
+            if self.transfer_mode:
+                syntax = TextWidget("Transfer Mode")
+
+            elif isinstance(message.sender, S3DirectoryTree ):
+
             # Construct a Syntax object for the path in the message
-            syntax = CnpSyntax.from_s3_path(
-                message.path,
-                line_numbers=False,
-                word_wrap=True,
-                indent_guides=True,
-                theme="monokai",
-                s3=self.s3_instance,
-                #code_width=80
-            )
+                syntax = CustomSyntax.from_s3_path(
+                    message.path,
+                    line_numbers=False,
+                    word_wrap=True,
+                    indent_guides=True,
+                    theme="monokai",
+                    s3=self.s3_instance,
+                    #code_width=80
+                )
+            else:
+                syntax = CustomSyntax.from_path(message.path,
+                    line_numbers=False,
+                    word_wrap=True,
+                    indent_guides=True,
+                    theme="monokai")
         except Exception:
             # Possibly a binary file
             # For demonstration purposes we will show the traceback
             syntax = Traceback(theme="monokai", width=None, show_locals=True)
-        self.app.sub_title = os.path.basename(message.path)
+            
+        
+        self.current_path = message.path
+        self.app.sub_title = f"{'Transfer Mode' if self.transfer_mode else f'{os.path.basename(self.current_path)} - Edit Mode'}"
+        
+            
         await self.body.update(syntax)
 
 
 # Run our app class
-MyApp.run(title="Cnp S3 Browser Viewer", log="cnp_s3_browser.log")
+MyApp.run(title="Rich S3 Browser Viewer", log="custom_s3_browser.log")
