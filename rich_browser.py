@@ -34,7 +34,7 @@ class TextWidget(Widget):
 
 with open("s3_config.json", 'r') as f:
     params = json.load(f)
-
+from s3fs import S3FileSystem
 
 class CustomS3Config(BaseModel):
     aws_secret_access_key: str = "minio_secret_key"
